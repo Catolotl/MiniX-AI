@@ -66,8 +66,18 @@
   </footer>
 
   <script>
-    const HF_API_TOKEN = "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";
     const MODEL_NAME = "google/embeddinggemma-300m";
+
+    // Get token from localStorage or prompt user to enter it once
+    let HF_API_TOKEN = localStorage.getItem('HF_API_TOKEN');
+    if (!HF_API_TOKEN) {
+      HF_API_TOKEN = prompt("Enter your Hugging Face API Token:");
+      if (HF_API_TOKEN) {
+        localStorage.setItem('HF_API_TOKEN', HF_API_TOKEN);
+      } else {
+        alert("No API token provided. The bot won't work without it.");
+      }
+    }
 
     const btn = document.getElementById("submitBtn");
     const input = document.getElementById("textInput");
@@ -77,6 +87,11 @@
       const text = input.value.trim();
       if (!text) {
         output.textContent = "Please enter some text.";
+        return;
+      }
+
+      if (!HF_API_TOKEN) {
+        output.textContent = "No API token available. Please refresh and enter your token.";
         return;
       }
 
@@ -99,7 +114,6 @@
           return;
         }
 
-        // Data should be an array of floats (embedding vector)
         output.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
         output.textContent = "Request failed: " + err.message;
