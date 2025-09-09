@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>MiniX Embedding Bot</title>
+  <title>MiniX DeepAI Bot</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,9 +10,6 @@
       margin: 40px auto;
       padding: 0 20px;
       text-align: center;
-    }
-    h1 {
-      margin-bottom: 20px;
     }
     textarea {
       width: 100%;
@@ -24,7 +21,7 @@
       resize: vertical;
     }
     button {
-      margin-top: 10px;
+      margin: 10px;
       padding: 10px 20px;
       font-size: 16px;
       border-radius: 5px;
@@ -33,8 +30,6 @@
     #output {
       margin-top: 20px;
       text-align: left;
-      max-height: 300px;
-      overflow-y: auto;
       background: #f5f5f5;
       padding: 15px;
       border-radius: 5px;
@@ -43,82 +38,75 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
-    footer {
-      margin-top: 40px;
-      font-size: 14px;
-      color: #666;
-    }
-    a {
-      color: #1a73e8;
-      text-decoration: none;
+    img {
+      max-width: 100%;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>MiniX Embedding Bot</h1>
-  <textarea id="textInput" placeholder="Please Type something..."></textarea><br />
-  <button id="submitBtn">Ask</button>
+  <h1>MiniX DeepAI Bot</h1>
+  <textarea id="textInput" placeholder="Type something here..."></textarea><br />
+  <button onclick="getEmbedding()">🔠 Get Embedding</button>
+  <button onclick="generateImage()">🖼️ Generate Image</button>
 
   <div id="output"></div>
 
-  <footer>
-    Hosted with <a href="https://huggingface.co" target="_blank" rel="noopener noreferrer">Hugging Face</a>
-  </footer>
-
   <script>
-    const MODEL_NAME = "google/embeddinggemma-300m";
+    const DEEP_AI_API_KEY = "YOUR_DEEPAI_API_KEY_HERE"; // put your DeepAI key here
 
-    // Get token from localStorage or prompt user to enter it once
-    let HF_API_TOKEN = localStorage.getItem('HF_API_TOKEN');
-    if (!HF_API_TOKEN) {
-      HF_API_TOKEN = prompt("Enter your Hugging Face API Token:");
-      if (HF_API_TOKEN) {
-        localStorage.setItem('HF_API_TOKEN', HF_API_TOKEN);
-      } else {
-        alert("No API token provided. The bot won't work without it.");
+    async function getEmbedding() {
+      const text = document.getElementById("textInput").value.trim();
+      const output = document.getElementById("output");
+      if (!text) return output.textContent = "Please enter text.";
+
+      output.textContent = "Generating embedding...";
+
+      try {
+        const res = await fetch("https://api.deepai.org/api/text-embedding", {
+          method: "POST",
+          headers: {
+            "Api-Key": DEEP_AI_API_KEY,
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: `text=${encodeURIComponent(text)}`
+        });
+
+        const data = await res.json();
+        output.textContent = JSON.stringify(data.output, null, 2);
+      } catch (err) {
+        output.textContent = "Error: " + err.message;
       }
     }
 
-    const btn = document.getElementById("submitBtn");
-    const input = document.getElementById("textInput");
-    const output = document.getElementById("output");
+    async function generateImage() {
+      const text = document.getElementById("textInput").value.trim();
+      const output = document.getElementById("output");
+      if (!text) return output.textContent = "Please enter text.";
 
-    btn.addEventListener("click", async () => {
-      const text = input.value.trim();
-      if (!text) {
-        output.textContent = "Please enter some text.";
-        return;
-      }
-
-      if (!HF_API_TOKEN) {
-        output.textContent = "No API token available. Please refresh and enter your token.";
-        return;
-      }
-
-      output.textContent = "Loading embedding...";
+      output.textContent = "Generating image...";
 
       try {
-        const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL_NAME}`, {
+        const res = await fetch("https://api.deepai.org/api/text2img", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${HF_API_TOKEN}`,
-            "Content-Type": "application/json"
+            "Api-Key": DEEP_AI_API_KEY,
+            "Content-Type": "application/x-www-form-urlencoded"
           },
-          body: JSON.stringify({ inputs: text })
+          body: `text=${encodeURIComponent(text)}`
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (data.error) {
-          output.textContent = "Error: " + data.error;
-          return;
+        if (data.output_url) {
+          output.innerHTML = `<strong>Image:</strong><br/><img src="${data.output_url}" alt="Generated Image" />`;
+        } else {
+          output.textContent = "Image generation failed.";
         }
-
-        output.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        output.textContent = "Request failed: " + err.message;
+        output.textContent = "Error: " + err.message;
       }
-    });
+    }
   </script>
 </body>
 </html>
