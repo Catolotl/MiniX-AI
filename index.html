@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MiniX - Chatbot</title>
   <style>
     h1 {
@@ -87,9 +87,9 @@
       z-index: 1000;
     }
   </style>
-  <h1>Mini Crafts Copilot BETA</h1>
 </head>
 <body>
+  <h1>Mini Crafts Copilot BETA</h1>
   <div id="chatbox"></div>
   <div id="inputContainer">
     <input type="text" id="userInput" placeholder="Type a message..." />
@@ -98,11 +98,12 @@
   <audio id="audioPlayer" controls style="display:none;"></audio>
 
   <script>
-    const HF_API_TOKEN = "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"; // Replace this
-    const HF_MODEL = "HuggingFaceH4/zephyr-7b-beta";   // You can change to another model
+    const HF_API_TOKEN = "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"; // <-- Put your token here
+    const HF_MODEL = "HuggingFaceH4/zephyr-7b-beta"; // You can change to another model if you want
 
     let currentSongTitle = "";
 
+    // Typing effect for bot replies
     function typeWriterEffect(element, text, speed = 50) {
       element.textContent = "";
       let i = 0;
@@ -116,34 +117,35 @@
       type();
     }
 
+    // Random delay between bot responses
     function getRandomDelay(min = 2000, max = 4000) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // Send user message & get bot response
     function sendMessage() {
-      let inputField = document.getElementById("userInput");
-      let userTextRaw = inputField.value.trim();
-      let userTextProcessed = userTextRaw.toLowerCase().replace(/[^a-z0-9 ]/g, "");
-
+      const inputField = document.getElementById("userInput");
+      const userTextRaw = inputField.value.trim();
       if (userTextRaw === "") return;
 
       displayMessage(userTextRaw, "user");
       inputField.value = "";
 
-      let thinkingBubble = displayMessage("Thinking...", "bot");
+      const thinkingBubble = displayMessage("Thinking...", "bot");
 
-      let delay = getRandomDelay();
-
+      // Small delay to simulate thinking
       setTimeout(() => {
-        // --- STOP command ---
+        const userTextProcessed = userTextRaw.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+
+        // STOP song command
         if (/^stop /i.test(userTextProcessed)) {
-          let stopSongName = userTextRaw.replace(/^stop /i, "").trim().toLowerCase();
+          const stopSongName = userTextRaw.replace(/^stop /i, "").trim().toLowerCase();
           if (!stopSongName) {
             typeWriterEffect(thinkingBubble, "Please tell me which song to stop!");
             return;
           }
           if (currentSongTitle && currentSongTitle.toLowerCase().includes(stopSongName)) {
-            let audioPlayer = document.getElementById("audioPlayer");
+            const audioPlayer = document.getElementById("audioPlayer");
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
             typeWriterEffect(thinkingBubble, `Stopped "${currentSongTitle}".`);
@@ -154,9 +156,9 @@
           return;
         }
 
-        // --- PLAY command ---
+        // PLAY song command
         if (/^play (the song|)/i.test(userTextProcessed)) {
-          let songName = userTextRaw.replace(/^play (the song|)/i, "").trim();
+          const songName = userTextRaw.replace(/^play (the song|)/i, "").trim();
           if (!songName) {
             typeWriterEffect(thinkingBubble, "Please tell me the name of the song!");
             return;
@@ -166,9 +168,9 @@
             .then(response => response.json())
             .then(data => {
               if (data && data.data && data.data.length > 0) {
-                let track = data.data[0];
-                let previewUrl = track.preview;
-                let audioPlayer = document.getElementById("audioPlayer");
+                const track = data.data[0];
+                const previewUrl = track.preview;
+                const audioPlayer = document.getElementById("audioPlayer");
                 audioPlayer.src = previewUrl;
                 audioPlayer.play();
                 currentSongTitle = track.title;
@@ -184,9 +186,9 @@
           return;
         }
 
-        // --- IMAGE GENERATION command ---
+        // IMAGE GENERATION command
         if (/^generate /i.test(userTextProcessed)) {
-          let prompt = userTextRaw.replace(/^generate /i, "").trim();
+          const prompt = userTextRaw.replace(/^generate /i, "").trim();
           if (!prompt) {
             typeWriterEffect(thinkingBubble, "Please provide a description for the image!");
             return;
@@ -203,7 +205,7 @@
             .then(response => response.json())
             .then(data => {
               if (data.output_url) {
-                let imageElement = document.createElement("img");
+                const imageElement = document.createElement("img");
                 imageElement.src = data.output_url;
                 imageElement.alt = prompt;
                 imageElement.style.maxWidth = "300px";
@@ -221,7 +223,7 @@
           return;
         }
 
-        // --- DEFAULT (Hugging Face AI Chat) ---
+        // DEFAULT: Hugging Face AI Chat
         fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
           method: "POST",
           headers: {
@@ -230,22 +232,22 @@
           },
           body: JSON.stringify({ inputs: userTextRaw }),
         })
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             const reply = data?.[0]?.generated_text || "I'm not sure how to respond yet.";
-            typeWriterEffect(thinkingBubble, reply.replace(userTextRaw, "").trim());
+            typeWriterEffect(thinkingBubble, reply.trim());
           })
-          .catch((error) => {
+          .catch(error => {
             console.error("Hugging Face error:", error);
             typeWriterEffect(thinkingBubble, "Error reaching Hugging Face API.");
           });
-
-      }, delay);
+      }, getRandomDelay());
     }
 
+    // Display message in chatbox
     function displayMessage(text, sender) {
-      let chatbox = document.getElementById("chatbox");
-      let messageElement = document.createElement("div");
+      const chatbox = document.getElementById("chatbox");
+      const messageElement = document.createElement("div");
       messageElement.classList.add("message", sender);
       messageElement.textContent = text;
       chatbox.appendChild(messageElement);
@@ -253,9 +255,12 @@
       return messageElement;
     }
 
-    function getRandomStatus() {
-      return Math.floor(Math.random() * 2) + 1;
-    }
+    // Support pressing Enter to send message
+    document.getElementById('userInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
