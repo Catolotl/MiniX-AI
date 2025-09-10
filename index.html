@@ -47,14 +47,13 @@
 <body>
   <h1>MiniX DeepAI Bot</h1>
   <textarea id="textInput" placeholder="Type something here..."></textarea><br />
-  <button onclick="getEmbedding()">🔠 Get Embedding</button>
+  <button onclick="getEmbedding()">🔠 Ask</button>
   <button onclick="generateImage()">🖼️ Generate Image</button>
 
   <div id="output"></div>
 
   <script>
-    const DEEP_AI_API_KEY = "a0e55347-c83c-4afa-bb5e-a165ca514f06"; // put your DeepAI key here
-
+    const DEEP_AI_API_KEY = "a0e55347-c83c-4afa-bb5e-a165ca514f06";
     async function getEmbedding() {
       const text = document.getElementById("textInput").value.trim();
       const output = document.getElementById("output");
